@@ -50,7 +50,7 @@ export const NewTask = () => {
     .catch((err) => {
       setErrorMessage(`リストの取得に失敗しました。${err}`);
     })
-  }, [])
+  }, [cookies.token])
 
   return (
     <div>
