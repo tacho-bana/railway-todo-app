@@ -126,7 +126,41 @@ export const Home = () => {
   );
 };
 
-// 表示するタスク
+// 期限日時をフォーマットを変える (例: "2023-10-01T10:00:00Z" → "2023-10-01 19:00")
+function LimitDate(isoString) {
+  if (!isoString) return "";
+  const dateObj = new Date(isoString);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  const hours = String(dateObj.getHours()).padStart(2, "0");
+  const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+// 期限 - 現在
+function LimitTime(isoString) {
+  if (!isoString) return "";
+  const now = new Date().getTime();
+  const limitTime = new Date(isoString).getTime();
+  const diff = limitTime - now;
+  if (diff <= 0) return "期限切れ";
+
+  // 差分(ミリ秒) → 日/時/分/秒に変換
+  const diffSec = Math.floor(diff / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHours = Math.floor(diffMin / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  const days = diffDays;
+  const hours = diffHours % 24;
+  const minutes = diffMin % 60;
+  const seconds = diffSec % 60;
+
+  return `${days}日 ${hours}時間 ${minutes}分 ${seconds}秒`;
+}
+
+// タスク一覧を表示するコンポーネント
 const Tasks = (props) => {
   const { tasks, selectListId, isDoneDisplay } = props;
   if (tasks === null) return null;
@@ -135,9 +169,7 @@ const Tasks = (props) => {
     return (
       <ul>
         {tasks
-          .filter((task) => {
-            return task.done === true;
-          })
+          .filter((task) => task.done === true)
           .map((task, key) => (
             <li key={key} className="task-item">
               <Link
@@ -147,6 +179,14 @@ const Tasks = (props) => {
                 {task.title}
                 <br />
                 {task.done ? "完了" : "未完了"}
+                {task.limit && (
+                  <>
+                    <br />
+                    期限日時: {LimitDate(task.limit)}
+                    <br />
+                    残り: {LimitTime(task.limit)}
+                  </>
+                )}
               </Link>
             </li>
           ))}
@@ -157,9 +197,7 @@ const Tasks = (props) => {
   return (
     <ul>
       {tasks
-        .filter((task) => {
-          return task.done === false;
-        })
+        .filter((task) => task.done === false)
         .map((task, key) => (
           <li key={key} className="task-item">
             <Link
@@ -169,6 +207,16 @@ const Tasks = (props) => {
               {task.title}
               <br />
               {task.done ? "完了" : "未完了"}
+
+              {/* 期限と残り時間を追加表示（あれば） */}
+              {task.limit && (
+                <>
+                  <br />
+                  期限日時: {LimitDate(task.limit)}
+                  <br />
+                  残り: {LimitTime(task.limit)}
+                </>
+              )}
             </Link>
           </li>
         ))}
@@ -176,14 +224,15 @@ const Tasks = (props) => {
   );
 };
 
-// ここで PropTypes 定義
+// ここで PropTypes 定義 (limitを追加)
 Tasks.propTypes = {
   tasks: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number,
       title: PropTypes.string,
       done: PropTypes.bool,
-    }),
+      limit: PropTypes.string, // "YYYY-MM-DDTHH:mm:ssZ" 等のISO8601形式の想定
+    })
   ),
   selectListId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   isDoneDisplay: PropTypes.string,
