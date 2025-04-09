@@ -67,6 +67,20 @@ export const Home = () => {
       });
   };
 
+  const handleListKey = (event) => {
+    if (lists.length === 0) return;
+    const currentIndex = lists.findIndex((l) => l.id === selectListId);
+  
+    if (event.key === "ArrowRight") {
+      const RightIndex = (currentIndex + 1) % lists.length;
+      handleSelectList(lists[RightIndex].id);
+    } else if (event.key === "ArrowLeft") {
+      const LeftIndex = (currentIndex - 1 + lists.length) % lists.length;
+      handleSelectList(lists[LeftIndex].id);
+    }
+  };
+  
+
   return (
     <div>
       <Header />
@@ -86,12 +100,19 @@ export const Home = () => {
               </p>
             </div>
           </div>
-          <ul className="list-tab">
+          <ul
+            className="list-tab"
+            role="tablist"
+            tabIndex={0}
+            onKeyDown={(event) => handleListKey(event)}
+          >
             {lists.map((list, key) => {
               const isActive = list.id === selectListId;
               return (
                 <li
                   key={key}
+                  role="tab"
+                  aria-selected={isActive}
                   className={`list-tab-item ${isActive ? "active" : ""}`}
                   onClick={() => handleSelectList(list.id)}
                 >
